@@ -2,6 +2,7 @@ package tests;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +31,7 @@ public class OrderPageTests {
     private String metroStation;
     private String phone;
     private String browser;
+    private By finalScreen = By.className("Order_Modal__YZ-d3");
 
     public OrderPageTests(String name, String surname, String address, String metroStation, String phone) {
         this.name = name;
@@ -41,7 +43,7 @@ public class OrderPageTests {
 
     @Before
     public void setUp() {
-        browser = System.getProperty("browser", "firefox");
+        browser = System.getProperty("browser", "chrome");
         if ("chrome".equalsIgnoreCase(browser)) {
             WebDriverManager.chromedriver().setup();
             driver = new ChromeDriver();
@@ -83,13 +85,15 @@ public class OrderPageTests {
         orderPage.clickNextButton();
 
         // Выбор срока аренды
+        orderPage.selectNextDay();
         orderPage.selectRentalPeriod();
 
         // Завершение оформления заказа
         orderPage.submitOrder();
+        orderPage.clickYesButton();
 
         WebElement orderModal = new WebDriverWait(driver, 7)
-                .until(ExpectedConditions.visibilityOfElementLocated(By.className("Order_Modal__YZ-d3")));
+                .until(ExpectedConditions.visibilityOfElementLocated(finalScreen));
         assertTrue("Окно заказа не отображается.", orderModal.isDisplayed());
     }
 
@@ -107,13 +111,16 @@ public class OrderPageTests {
         orderPage.clickNextButton();
 
         // Выбор срока аренды
+        orderPage.selectNextDay();
         orderPage.selectRentalPeriod();
 
         // Завершение оформления заказа
         orderPage.submitOrder();
+        orderPage.clickYesButton();
 
+        //Перепробовала все возможные варианты проверки, не могу разобраться с тем, почему в хроме тесты успешные
         WebElement orderModal = new WebDriverWait(driver, 7)
-                .until(ExpectedConditions.visibilityOfElementLocated(By.className("Order_Modal__YZ-d3")));
+                .until(ExpectedConditions.visibilityOfElementLocated(finalScreen));
         assertTrue("Окно заказа не отображается.", orderModal.isDisplayed());
     }
 

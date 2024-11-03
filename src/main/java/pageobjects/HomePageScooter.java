@@ -13,6 +13,11 @@ public class HomePageScooter {
     private WebDriver driver;
     private WebDriverWait wait;
 
+    // Локаторы
+    private By faqSection = By.className("Home_FourPart__1uthg");
+    private By accordionButtons = By.className("accordion__button");
+    private String accordionPanelXpath = "//*[@id='accordion__panel-%d']/p";
+
     public HomePageScooter(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, 10); // Увеличиваем время ожидания до 10 секунд
@@ -23,10 +28,9 @@ public class HomePageScooter {
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
     }
 
-    // Метод для открытия FAQ вопроса по индексу
     public void expandFAQSectionByIndex(int index) {
-        scrollToElement(By.className("Home_FourPart__1uthg"));
-        List<WebElement> buttons = driver.findElements(By.className("accordion__button"));
+        scrollToElement(faqSection); // Используем вынесенный локатор faqSection
+        List<WebElement> buttons = driver.findElements(accordionButtons); // Используем вынесенный локатор accordionButtons
 
         if (index < 0 || index >= buttons.size()) {
             throw new IllegalArgumentException("Некорректный индекс вопроса: " + index);
@@ -36,20 +40,19 @@ public class HomePageScooter {
         button.click();
 
         try {
-            // Ожидаем появления текста ответа по индексу, а не только панели
-            String xpath = String.format("//*[@id='accordion__panel-%d']/p", index);
+            String xpath = String.format(accordionPanelXpath, index);
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath)));
         } catch (Exception e) {
             throw new RuntimeException("Не удалось найти панель с текстом после нажатия кнопки FAQ: " + button.getText(), e);
         }
     }
 
-    // Метод для получения текста ответа по индексу
     public String getFAQAnswerTextByIndex(int index) {
-        String xpath = String.format("//*[@id='accordion__panel-%d']/p", index);
+        String xpath = String.format(accordionPanelXpath, index);
         WebElement answer = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath)));
         return answer.getText();
     }
 }
+
 
 

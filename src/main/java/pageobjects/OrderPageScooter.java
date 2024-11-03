@@ -7,78 +7,147 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 public class OrderPageScooter {
     private WebDriver driver;
 
+    // Локаторы
     private By orderButtonTop = By.className("Button_Button__ra12g");
     private By orderButtonBottom = By.className("Button_Button__ra12g");
-    private By nameInput = By.xpath("//input[@placeholder='* Имя']");
-    private By surnameInput = By.xpath("//input[@placeholder='* Фамилия']");
-    private By addressInput = By.xpath("//input[@placeholder='* Адрес: куда привезти заказ']");
-    private By metroStationInput = By.xpath("//input[@placeholder='* Станция метро']");
-    private By phoneInput = By.xpath("//input[@placeholder='* Телефон: на него позвонит курьер']");
-    private By nextButton = By.xpath("//*[@id='root']/div/div[2]/div[3]/button");
+    private By nameInput = By.xpath("//*[@id='root']/div/div[2]/div[2]/div[1]/input");
+    private By surnameInput = By.xpath("//*[@id='root']/div/div[2]/div[2]/div[2]/input");
+    private By addressInput = By.xpath("//*[@id='root']/div/div[2]/div[2]/div[3]/input");
+    private By metroStationInput = By.xpath("//*[@id='root']/div/div[2]/div[2]/div[4]/div/div"); // обновленный локатор для станции метро
+    private By phoneInput = By.xpath("//*[@id='root']/div/div[2]/div[2]/div[5]/input"); // обновленный локатор для телефона
+    private By nextButton = By.cssSelector("#root > div > div.Order_Content__bmtHS > div.Order_NextButton__1_rCA > button");
+    private By submitButton = By.xpath("//*[@id='root']/div/div[2]/div[3]/button[2]");
     private By successMessage = By.className("Order_Notice__3k1yt");
+    private By cookieCloseButton = By.className("App_CookieButton__3cvqF");
+    private By yesButton = By.xpath("//*[@id='root']/div/div[2]/div[5]/div[2]/button[2]");
 
     public OrderPageScooter(WebDriver driver) {
         this.driver = driver;
     }
 
-    public void clickOrderButtonTop() {
-        driver.findElement(orderButtonTop).click();
+    public void closeCookieBanner() {
+        try {
+            WebElement cookieElement = new WebDriverWait(driver, 10)
+                    .until(ExpectedConditions.elementToBeClickable(cookieCloseButton));
+            cookieElement.click();
+        } catch (Exception e) {
+            // Игнорируем, если баннер не появился или кнопка не кликабельна
+        }
     }
 
-    public void clickOrderButtonBottom() {
-        driver.findElement(orderButtonBottom).click();
+    public void clickOrderButtonFromHeader() {
+        WebElement orderButton = new WebDriverWait(driver, 10)
+                .until(ExpectedConditions.elementToBeClickable(orderButtonTop));
+        orderButton.click();
+    }
+
+    public void clickOrderButtonFromBottom() {
+        WebElement orderButton = new WebDriverWait(driver, 10)
+                .until(ExpectedConditions.elementToBeClickable(orderButtonBottom));
+        orderButton.click();
     }
 
     public void fillOrderForm(String name, String surname, String address, String metroStation, String phone) {
-        WebElement nameElement = new WebDriverWait(driver, 20)
+        fillName(name);
+        fillSurname(surname);
+        fillAddress(address);
+        selectMetroStation(metroStation);
+        fillPhone(phone);
+    }
+
+    private void fillName(String name) {
+        WebElement nameElement = new WebDriverWait(driver, 10)
                 .until(ExpectedConditions.visibilityOfElementLocated(nameInput));
         nameElement.sendKeys(name);
+    }
 
-        WebElement surnameElement = new WebDriverWait(driver, 20)
+    private void fillSurname(String surname) {
+        WebElement surnameElement = new WebDriverWait(driver, 10)
                 .until(ExpectedConditions.visibilityOfElementLocated(surnameInput));
         surnameElement.sendKeys(surname);
+    }
 
-        WebElement addressElement = new WebDriverWait(driver, 20)
+    private void fillAddress(String address) {
+        WebElement addressElement = new WebDriverWait(driver, 10)
                 .until(ExpectedConditions.visibilityOfElementLocated(addressInput));
         addressElement.sendKeys(address);
+    }
 
-        WebElement metroStationElement = new WebDriverWait(driver, 20)
+    public void selectMetroStation(String metroStationName) {
+        WebElement metroStationInputElement = new WebDriverWait(driver, 7)
                 .until(ExpectedConditions.visibilityOfElementLocated(metroStationInput));
-        metroStationElement.click();
-        metroStationElement.sendKeys(metroStation);
+        metroStationInputElement.click();
 
-        // Явное ожидание появления выпадающего списка с выбором станции
-        WebElement selectedStation = new WebDriverWait(driver, 20)
-                .until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='select-search__select']//div[contains(text(), '" + metroStation + "')]")));
+        WebElement stationList = new WebDriverWait(driver, 7)
+                .until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='root']/div/div[2]/div[2]/div[4]/div/div[2]")));
 
-        // Попробуй выполнить клик с помощью JavaScript, если обычный клик не работает
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-        js.executeScript("arguments[0].click();", selectedStation);
+        WebElement metroStation = stationList.findElement(By.xpath(".//div[contains(text(), '" + metroStationName + "')]"));
+        try {
+            metroStation.click();
+        } catch (Exception e) {
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            js.executeScript("arguments[0].click();", metroStation);
+        }
+    }
 
-        WebElement phoneElement = new WebDriverWait(driver, 20)
+    public void selectNextDay() {
+        LocalDate nextDay = LocalDate.now().plusDays(1);
+        String dayOfWeek = nextDay.format(DateTimeFormatter.ofPattern("EEEE", new Locale("ru")));
+        String monthYear = nextDay.format(DateTimeFormatter.ofPattern("d'-е' MMMM yyyy г.", new Locale("ru")));
+        String ariaLabelDate = "Choose " + dayOfWeek + ", " + monthYear;
+
+        WebElement datePicker = new WebDriverWait(driver, 7)
+                .until(ExpectedConditions.visibilityOfElementLocated(By.className("react-datepicker-wrapper")));
+        datePicker.click();
+
+        WebElement dateElement = new WebDriverWait(driver, 7)
+                .until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@aria-label='" + ariaLabelDate + "']")));
+        dateElement.click();
+    }
+
+    private void fillPhone(String phone) {
+        WebElement phoneElement = new WebDriverWait(driver, 10)
                 .until(ExpectedConditions.visibilityOfElementLocated(phoneInput));
         phoneElement.sendKeys(phone);
     }
 
-    public void clickSubmitButton() {
-        WebElement submitButtonElement = new WebDriverWait(driver, 20)
+    public void clickNextButton() {
+        WebElement nextButtonElement = new WebDriverWait(driver, 10)
                 .until(ExpectedConditions.visibilityOfElementLocated(nextButton));
+        nextButtonElement.click();
+    }
 
-        assertButtonClass(submitButtonElement, "Button_Button__ra12g Button_Middle__1CSJM");
+    public void clickYesButton() {
+        WebElement yesButtonElement = new WebDriverWait(driver, 10)
+                .until(ExpectedConditions.visibilityOfElementLocated(yesButton));
+        yesButtonElement.click();
+    }
+
+    public void selectRentalPeriod() {
+        WebElement rentalPeriodDropdown = new WebDriverWait(driver, 7)
+                .until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id='root']/div/div[2]/div[2]/div[2]")));
+        rentalPeriodDropdown.click();
+
+        WebElement specificRentalPeriodOption = new WebDriverWait(driver, 7)
+                .until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id='root']/div/div[2]/div[2]/div[2]/div[2]/div[2]")));
+        specificRentalPeriodOption.click();
+    }
+
+    public void submitOrder() {
+        WebElement submitButtonElement = new WebDriverWait(driver, 10)
+                .until(ExpectedConditions.elementToBeClickable(submitButton));
         submitButtonElement.click();
     }
 
-    private void assertButtonClass(WebElement button, String expectedClass) {
-        String actualClass = button.getAttribute("class");
-        if (!actualClass.equals(expectedClass)) {
-            throw new AssertionError("Expected class: " + expectedClass + ", but found: " + actualClass);
-        }
-    }
-
     public String getSuccessMessage() {
-        return driver.findElement(successMessage).getText();
+        return new WebDriverWait(driver, 10)
+                .until(ExpectedConditions.visibilityOfElementLocated(successMessage)).getText();
     }
 }

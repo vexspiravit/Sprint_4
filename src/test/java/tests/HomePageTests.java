@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 @RunWith(Parameterized.class)
-class HomePageTests {
+public class HomePageTests {
 
     private WebDriver driver;
     private HomePageScooter homePage;
@@ -45,14 +45,19 @@ class HomePageTests {
 
     @Before
     public void setUp() {
+        browser = System.getProperty("browser", "firefox"); // Если переменная не задана, используем Chrome по умолчанию
+
         if ("chrome".equalsIgnoreCase(browser)) {
             WebDriverManager.chromedriver().setup();
             driver = new ChromeDriver();
         } else if ("firefox".equalsIgnoreCase(browser)) {
             WebDriverManager.firefoxdriver().setup();
-            System.setProperty("webdriver.firefox.bin", "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Firefox.lnk");
+            System.setProperty("webdriver.firefox.bin", "C:\\Program Files\\Mozilla Firefox\\firefox.exe");
             driver = new FirefoxDriver();
+        } else {
+            throw new IllegalArgumentException("Unsupported browser: " + browser);
         }
+
         driver.manage().window().maximize();
         homePage = new HomePageScooter(driver);
     }
