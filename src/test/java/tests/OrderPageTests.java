@@ -2,7 +2,6 @@ package tests;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +30,6 @@ public class OrderPageTests {
     private String metroStation;
     private String phone;
     private String browser;
-    private By finalScreen = By.className("Order_Modal__YZ-d3");
 
     public OrderPageTests(String name, String surname, String address, String metroStation, String phone) {
         this.name = name;
@@ -57,7 +55,7 @@ public class OrderPageTests {
 
         driver.manage().window().maximize();
         homePage = new HomePageScooter(driver);
-        orderPage = new OrderPageScooter(driver);
+        orderPage = new OrderPageScooter(driver, name, surname, address, metroStation, phone);
 
         // Инициализация страницы
         initPage();
@@ -78,10 +76,14 @@ public class OrderPageTests {
 
     @Test
     public void testOrderFromHeader() {
-        orderPage.clickOrderButtonFromHeader();
+        orderPage.clickOrderButtonHeader();
 
         // Заполнение формы
-        orderPage.fillOrderForm(name, surname, address, metroStation, phone);
+        orderPage.fillName();
+        orderPage.fillSurname();
+        orderPage.fillAddress();
+        orderPage.selectMetroStation();
+        orderPage.fillPhone();
         orderPage.clickNextButton();
 
         // Выбор срока аренды
@@ -93,21 +95,21 @@ public class OrderPageTests {
         orderPage.clickYesButton();
 
         WebElement orderModal = new WebDriverWait(driver, 7)
-                .until(ExpectedConditions.visibilityOfElementLocated(finalScreen));
+                .until(ExpectedConditions.visibilityOfElementLocated(orderPage.getFinalScreen()));
         assertTrue("Окно заказа не отображается.", orderModal.isDisplayed());
     }
 
     @Test
     public void testOrderFromBottomButton() {
-        // Прокрутка до кнопки заказа снизу
-        WebElement thirdPartElement = new WebDriverWait(driver, 7)
-                .until(ExpectedConditions.visibilityOfElementLocated(By.className("Home_ThirdPart__LSTEE")));
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", thirdPartElement);
-
-        orderPage.clickOrderButtonFromBottom();
+        orderPage.scrollToOrderButton();
+        orderPage.clickOrderButtonBottom();
 
         // Заполнение формы
-        orderPage.fillOrderForm(name, surname, address, metroStation, phone);
+        orderPage.fillName();
+        orderPage.fillSurname();
+        orderPage.fillAddress();
+        orderPage.selectMetroStation();
+        orderPage.fillPhone();
         orderPage.clickNextButton();
 
         // Выбор срока аренды
@@ -118,9 +120,8 @@ public class OrderPageTests {
         orderPage.submitOrder();
         orderPage.clickYesButton();
 
-        //Перепробовала все возможные варианты проверки, не могу разобраться с тем, почему в хроме тесты успешные
         WebElement orderModal = new WebDriverWait(driver, 7)
-                .until(ExpectedConditions.visibilityOfElementLocated(finalScreen));
+                .until(ExpectedConditions.visibilityOfElementLocated(orderPage.getFinalScreen()));
         assertTrue("Окно заказа не отображается.", orderModal.isDisplayed());
     }
 

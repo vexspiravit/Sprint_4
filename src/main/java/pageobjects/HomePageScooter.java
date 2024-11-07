@@ -16,7 +16,7 @@ public class HomePageScooter {
     // Локаторы
     private By faqSection = By.className("Home_FourPart__1uthg");
     private By accordionButtons = By.className("accordion__button");
-    private String accordionPanelXpath = "//*[@id='accordion__panel-%d']/p";
+    private String accordionPanel = "//*[@id='accordion__panel-%d']/p";
 
     public HomePageScooter(WebDriver driver) {
         this.driver = driver;
@@ -40,7 +40,7 @@ public class HomePageScooter {
         button.click();
 
         try {
-            String xpath = String.format(accordionPanelXpath, index);
+            String xpath = String.format(accordionPanel, index);
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath)));
         } catch (Exception e) {
             throw new RuntimeException("Не удалось найти панель с текстом после нажатия кнопки FAQ: " + button.getText(), e);
@@ -48,7 +48,7 @@ public class HomePageScooter {
     }
 
     public String getFAQAnswerTextByIndex(int index) {
-        String xpath = String.format(accordionPanelXpath, index);
+        String xpath = String.format(accordionPanel, index);
         WebElement answer = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath)));
         return answer.getText();
     }
